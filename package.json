@@ -1,0 +1,8 @@
+{
+  "name": "emadchat-scheduled-tasks",
+  "description": "سكربتات مجدولة لتشغيل الانتخابات الأسبوعية وفحص النشاط الإجباري لجماعات عماد شات عبر GitHub Actions",
+  "private": true,
+  "dependencies": {
+    "firebase-admin": "^12.1.0"
+  }
+}
