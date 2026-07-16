@@ -1,0 +1,51 @@
+name: مهام عماد شات المجدولة
+
+on:
+  schedule:
+    # الانتخابات الأسبوعية: كل خميس 21:00 UTC = كل جمعة 00:00 بتوقيت الرياض (UTC+3)
+    - cron: '0 21 * * 4'
+    # فحص النشاط الإجباري: يوميًا 00:00 UTC = 03:00 بتوقيت الرياض
+    - cron: '0 0 * * *'
+  workflow_dispatch: {} # يسمح بتشغيل المهمتين يدويًا من تبويب Actions للاختبار
+
+jobs:
+  run-scheduled-task:
+    runs-on: ubuntu-latest
+    steps:
+      - name: استنساخ المستودع
+        uses: actions/checkout@v4
+
+      - name: تجهيز Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: تثبيت الحزم
+        working-directory: scripts
+        run: npm install
+
+      - name: تنفيذ فرز الانتخابات الأسبوعية (كل جمعة فقط)
+        if: github.event.schedule == '0 21 * * 4'
+        working-directory: scripts
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          FIREBASE_DATABASE_URL: ${{ secrets.FIREBASE_DATABASE_URL }}
+        run: node weeklyElectionTally.js
+
+      - name: تنفيذ فحص النشاط الإجباري (يوميًا)
+        if: github.event.schedule == '0 0 * * *'
+        working-directory: scripts
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          FIREBASE_DATABASE_URL: ${{ secrets.FIREBASE_DATABASE_URL }}
+        run: node inactivityCheck.js
+
+      - name: تنفيذ المهمتين معًا (عند التشغيل اليدوي فقط)
+        if: github.event_name == 'workflow_dispatch'
+        working-directory: scripts
+        env:
+          FIREBASE_SERVICE_ACCOUNT_KEY: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEY }}
+          FIREBASE_DATABASE_URL: ${{ secrets.FIREBASE_DATABASE_URL }}
+        run: |
+          node weeklyElectionTally.js
+          node inactivityCheck.js
