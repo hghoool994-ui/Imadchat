@@ -1,0 +1,27 @@
+name: صيانة الجماعات الرسمية (بدون خطة Blaze)
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch: {}
+
+jobs:
+  run-maintenance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: تحميل المستودع
+        uses: actions/checkout@v4
+
+      - name: تثبيت Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: تثبيت firebase-admin
+        run: npm install firebase-admin
+
+      - name: تشغيل سكربت صيانة الجماعات
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          FIREBASE_DATABASE_URL: ${{ secrets.FIREBASE_DATABASE_URL }}
+        run: node functions/communities-cron.js
